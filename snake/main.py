@@ -3,12 +3,8 @@ import sys
 import random
 import asyncio
 
-# Initialize Pygame
 pygame.init()
 
-# -----------------------
-# GAME CONSTANTS
-# -----------------------
 BAR_HEIGHT = 150
 BLOCK_SIZE = 30  # Size of one grid block (in pixels)
 GRID_WIDTH = 40  # Number of blocks horizontally
@@ -19,16 +15,15 @@ SCREEN_WIDTH = GRID_WIDTH * BLOCK_SIZE
 SCREEN_HEIGHT = GRID_HEIGHT * BLOCK_SIZE
 SCREEN_HEIGHT_TOTAL = GRID_HEIGHT_PLAYABLE * BLOCK_SIZE + BAR_HEIGHT
 
-FPS = 60 # Game speed (frames per second)
-MOVE_DELAY = 100
+FPS = 60 # Game speed
 
-# Create the game window
+# Game Window
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Funny Snake")
+pygame.display.set_caption("nomnom")
 snake_sprite = pygame.image.load("nyan2.jpg")
 snake_sprite = pygame.transform.scale(snake_sprite, (BLOCK_SIZE, BLOCK_SIZE))
 
-# Font for on-screen text
+# Fonts
 font = pygame.font.Font("PixelOperator-Bold.ttf", 50)
 big_font = pygame.font.Font("PixelOperator-Bold.ttf", 150)
 letter_font = pygame.font.Font("MomcakeBold-WyonA.otf", 26)
@@ -62,7 +57,7 @@ def draw_bar(score, highScore, key_map):
     
     # Render key mappings
     center_x = 800
-    direction_labels = {"c": (0, -1), "d": (0, 1), "b": (-1, 0), "a": (1, 0)}
+    direction_labels = {"c": (0, -1), "d": (0, 1), "b": (-1, 0), "a": (1, 0)}  
     offset_x = 100  # Horizontal offset for each label
     
     for i, (label, direction) in enumerate(direction_labels.items()):
@@ -90,7 +85,6 @@ def randomize_key_mapping():
     # Shuffle directions so that every time the mapping might differ
     random.shuffle(directions)
     
-    # Create a dictionary
     key_map = {}
     for i, k in enumerate(chosen_keys):
         key_map[k] = directions[i]
@@ -137,7 +131,77 @@ def generate_food(snake_positions):
         if (fx, fy) not in snake_positions:
             return (fx, fy)
 
+def fade_out(duration=1000):
+    fade_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+    fade_surface.fill((0, 0, 0))  # Black fade
+    clock = pygame.time.Clock()
+    start_time = pygame.time.get_ticks()
+
+    while True:
+        elapsed_time = pygame.time.get_ticks() - start_time
+        alpha = min(255, int(255 * (elapsed_time / duration)))  # Calculate alpha value
+        fade_surface.set_alpha(alpha)
+        screen.blit(fade_surface, (0, 0))
+        pygame.display.flip()
+        
+        # Break the loop when fade is complete
+        if elapsed_time >= duration:
+            break
+
+        clock.tick(FPS)
+
+def title_screen():
+    running = True
+    play_button = pygame.Rect(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2, 200, 70)
+    
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            
+            # Handle mouse click on the play button
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if play_button.collidepoint(event.pos):
+                    fade_out()
+                    # fade_in(render_callback=game_screen)
+                    running = False  # Exit title screen to start game
+
+        # Clear screen
+        screen.fill((0, 0, 0))
+
+        # Draw title
+        title_text = big_font.render("nomnom", True, (255, 255, 0))
+        screen.blit(title_text, (SCREEN_WIDTH // 2 - title_text.get_width() // 2, 200))
+
+        # Draw instructions
+        instructions = [
+            "Snake! - but with a twist: the controls keep changing!"
+        ]
+        for i, line in enumerate(instructions):
+            instruction_text = letter_font.render(line, True, (255, 255, 255))
+            screen.blit(instruction_text, (SCREEN_WIDTH // 2 - instruction_text.get_width() // 2, 335 + i * 50))
+
+        # Play button
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        
+        # Change color on hover
+        if play_button.collidepoint(mouse_x, mouse_y):
+            pygame.draw.rect(screen, (0, 200, 0), play_button)
+        else:
+            pygame.draw.rect(screen, (0, 255, 0), play_button)
+        
+        play_text = font.render("PLAY", True, (0, 0, 0))
+        screen.blit(play_text, (play_button.x + play_button.width // 2 - play_text.get_width() // 2, 
+                                play_button.y + play_button.height // 2 - play_text.get_height() // 2))
+
+        # Update display
+        pygame.display.flip()
+        clock.tick(FPS)
+
 async def main():
+    title_screen()
+    MOVE_DELAY = 100
     # Initial snake setup
     score = 0
     highScore = 0
@@ -216,6 +280,7 @@ async def main():
                     food_position = generate_food(snake_positions)
                     score += 1
                     eat_sound.play()
+                    MOVE_DELAY = max(30, MOVE_DELAY - 8) # MOVE_DELAY = 30 is the limit for the snake speed
                 else:
                     # If we didn't eat, remove the tail
                     if len(snake_positions) > snake_length:
@@ -227,6 +292,7 @@ async def main():
         draw_bar(score, highScore, key_map)
         
         if game_over:
+            MOVE_DELAY = 100 # resets movement speed
             gameover_sound.play()
             game_over_surface = big_font.render("GAME OVER", True, (255, 255, 0))
             text_surface = font.render("Press space bar to restart.", True, (255, 255, 255))
