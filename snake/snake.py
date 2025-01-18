@@ -29,24 +29,32 @@ snake_sprite = pygame.transform.scale(snake_sprite, (BLOCK_SIZE, BLOCK_SIZE))
 
 # Font for on-screen text
 font = pygame.font.Font("PixelOperator-Bold.ttf", 24)
-big_font = pygame.font.Font("PixelOperator-Bold.ttf", 70)
+big_font = pygame.font.Font("PixelOperator-Bold.ttf", 150)
 letter_font = pygame.font.Font("MomcakeBold-WyonA.otf", 26)
 
 # Clock to control game speed
 clock = pygame.time.Clock()
 
-# A pool of possible keys to pick from: letters + digits
+# A pool of possible keys to pick from: letters
 KEY_POOL = [pygame.K_a, pygame.K_b, pygame.K_c, pygame.K_d, pygame.K_e, pygame.K_f,
             pygame.K_g, pygame.K_h, pygame.K_i, pygame.K_j, pygame.K_k, pygame.K_l,
             pygame.K_m, pygame.K_n, pygame.K_o, pygame.K_p, pygame.K_q, pygame.K_r,
             pygame.K_s, pygame.K_t, pygame.K_u, pygame.K_v, pygame.K_w, pygame.K_x,
             pygame.K_y, pygame.K_z]
 
+# Music
+eat_sound = pygame.mixer.Sound("Nom.mp3")
+gameover_sound = pygame.mixer.Sound("GameOver.mp3")
+
+# Sprites
+snake_sprite = pygame.transform.scale(pygame.image.load("nyan2.jpg"), (BLOCK_SIZE, BLOCK_SIZE))
+food_sprite = pygame.transform.scale(pygame.image.load("greendonut.png"), (BLOCK_SIZE, BLOCK_SIZE))
+
 def draw_bar(score, key_map):
     bar_rect = pygame.Rect(0, SCREEN_HEIGHT - 60, SCREEN_WIDTH, BAR_HEIGHT)
     pygame.draw.rect(screen, (50, 50, 50), bar_rect)
     score_text = font.render(f"Score: {score}", True, (255, 255, 255))
-    screen.blit(score_text, (20, SCREEN_HEIGHT - 45))  # Draw score in the top-left corner of the bar
+    screen.blit(score_text, (20, SCREEN_HEIGHT - 45))  # Draw score in the bottom-left corner of the bar
     
     # Render key mappings
     center_x = 800
@@ -56,8 +64,20 @@ def draw_bar(score, key_map):
     for i, (label, direction) in enumerate(direction_labels.items()):
         key = next((k for k, v in key_map.items() if v == direction), None)
         key_name = pygame.key.name(key) if key else "None"
-        key_text = font.render(f"{label}: {key_name.capitalize()}", True, (255, 255, 255))
-        screen.blit(key_text, (center_x + i * offset_x, SCREEN_HEIGHT - 45))
+        key_name_text = key_name.capitalize()
+        key_name_surface = letter_font.render(key_name_text, True, (255, 255, 0))
+        
+        label_text = f"{label}: "
+        label_surface = font.render(label_text, True, (255, 255, 255))
+
+        label_x = center_x + i * offset_x
+        label_y = SCREEN_HEIGHT - 45
+
+        key_name_x = label_x + label_surface.get_width()
+        key_name_y = label_y
+
+        screen.blit(label_surface, (label_x, label_y))
+        screen.blit(key_name_surface, (key_name_x, key_name_y))
 
 def randomize_key_mapping():
     chosen_keys = random.sample(KEY_POOL, 4)
@@ -104,7 +124,7 @@ def draw_snake(snake_positions):
 def draw_food(food_position):
     (fx, fy) = food_position
     rect = pygame.Rect(fx * BLOCK_SIZE, fy * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE)
-    pygame.draw.rect(screen, (255, 0, 0), rect)
+    screen.blit(food_sprite, rect.topleft)
 
 def generate_food(snake_positions):
     while True:
@@ -116,9 +136,7 @@ def generate_food(snake_positions):
 def main():
     # Initial snake setup
     score = 0
-    last_move_time = pygame.time.get_ticks()
-    snake_sprite = pygame.image.load("nyan2.jpg")
-    snake_sprite = pygame.transform.scale(snake_sprite, (BLOCK_SIZE, BLOCK_SIZE))
+    last_move_time = pygame.time.get_ticks()    
     snake_positions = [(GRID_WIDTH // 2, GRID_HEIGHT_PLAYABLE // 2)]
     snake_direction = (1, 0)  # start moving right
     snake_length = 3
@@ -152,8 +170,18 @@ def main():
                 else:
                     # Check if the key is in our current mapping
                     if event.key in key_map:
-                        snake_direction = key_map[event.key]
-                        # After pressing one of the keys, randomize again
+                        proposed_direction = key_map[event.key]
+
+                        # Check if the proposed direction is opposite to the current direction
+                        if (snake_direction[0] + proposed_direction[0] == 0) and \
+                        (snake_direction[1] + proposed_direction[1] == 0):
+                            # If opposite, do nothing (ignore this input)
+                            pass
+                        else:
+                            # Update the direction if valid
+                            snake_direction = proposed_direction
+
+                        # After processing the key, randomize key mapping
                         key_map = randomize_pressed_key_mapping(key_map, event.key)
 
         current_time = pygame.time.get_ticks()
@@ -179,6 +207,7 @@ def main():
                     snake_length += 1
                     food_position = generate_food(snake_positions)
                     score += 1
+                    eat_sound.play()
                 else:
                     # If we didn't eat, remove the tail
                     if len(snake_positions) > snake_length:
@@ -190,54 +219,14 @@ def main():
         draw_bar(score, key_map)
         
         if game_over:
+            gameover_sound.play()
             game_over_surface = big_font.render("GAME OVER", True, (255, 255, 0))
             text_surface = font.render("Press any key to restart.", True, (255, 255, 255))
-            screen.blit(game_over_surface, (150, 150))
-            screen.blit(text_surface, (30, 350))
+            screen.blit(game_over_surface, ((GRID_WIDTH * BLOCK_SIZE) // 2 - 320, (GRID_HEIGHT * BLOCK_SIZE) // 2 - 150))
+            screen.blit(text_surface, ((GRID_WIDTH * BLOCK_SIZE) // 2 - 140, (GRID_HEIGHT * BLOCK_SIZE) // 2))
         else:
             draw_snake(snake_positions)
             draw_food(food_position)
-            
-            # Define the mapping from directions to (dx, dy) tuples
-            # direction_labels = {
-            #     "up": (0, -1),
-            #     "down": (0, 1),
-            #     "left": (-1, 0),
-            #     "right": (1, 0)
-            # }
-
-            # center_x = 260
-            # center_y = 60  # Distance from the top of the screen
-
-            # # Offset distance from the center for text placement
-            # offset = 50  # Adjust as needed for spacing
-
-            # for label, direction in direction_labels.items():
-            #     # Find the key mapped to the current direction
-            #     key = next((k for k, v in key_map.items() if v == direction), None)
-            #     # Get the name of the key (or display "None" if no key is mapped)
-            #     key_name = pygame.key.name(key) if key is not None else "None"
-                
-            #     # Define text for the label and key_name
-            #     label_text = f"{label.capitalize()}: "
-            #     key_name_text = key_name.capitalize()
-
-            #     # Render the label text (white)
-            #     label_surface = font.render(label_text, True, (255, 255, 255))
-
-            #     # Render the key_name text (bright yellow)
-            #     key_name_surface = letter_font.render(key_name_text, True, (255, 255, 0))
-
-            #     # Calculate the position for the label and key_name
-            #     label_x = center_x + direction[0] * offset
-            #     label_y = center_y + direction[1] * offset
-
-            #     key_name_x = label_x + label_surface.get_width()  # Position the key_name text after the label
-            #     key_name_y = label_y
-
-            #     # Draw both parts of the text on the screen
-            #     screen.blit(label_surface, (label_x, label_y))
-            #     screen.blit(key_name_surface, (key_name_x, key_name_y))
 
         pygame.display.flip()
         clock.tick(FPS)
