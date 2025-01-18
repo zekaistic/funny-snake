@@ -52,11 +52,13 @@ gameover_sound = pygame.mixer.Sound("GameOver.wav")
 snake_sprite = pygame.transform.scale(pygame.image.load("nyan2.jpg"), (BLOCK_SIZE, BLOCK_SIZE))
 food_sprite = pygame.transform.scale(pygame.image.load("greendonut.png"), (BLOCK_SIZE, BLOCK_SIZE))
 
-def draw_bar(score, key_map):
+def draw_bar(score, highScore, key_map):
     bar_rect = pygame.Rect(0, SCREEN_HEIGHT -150, SCREEN_WIDTH, BAR_HEIGHT)
     pygame.draw.rect(screen, (50, 50, 50), bar_rect)
     score_text = font.render(f"Score: {score}", True, (255, 255, 255))
+    highScore_text = font.render(f"High Score: {highScore}", True, (255, 255, 0))
     screen.blit(score_text, (20, SCREEN_HEIGHT - 100))  # Draw score in the bottom-left corner of the bar
+    screen.blit(highScore_text, (250, SCREEN_HEIGHT - 100))
     
     # Render key mappings
     center_x = 800
@@ -138,10 +140,11 @@ def generate_food(snake_positions):
 async def main():
     # Initial snake setup
     score = 0
+    highScore = 0
     last_move_time = pygame.time.get_ticks()    
     snake_positions = [(GRID_WIDTH // 2, GRID_HEIGHT_PLAYABLE // 2)]
     snake_direction = (1, 0)  # start moving right
-    snake_length = 3
+    snake_length = 6
     
     # Generate initial food
     food_position = generate_food(snake_positions)
@@ -160,15 +163,18 @@ async def main():
                 
             if event.type == pygame.KEYDOWN:
                 if game_over:
-                    # Press any key to restart
-                    snake_positions = [(GRID_WIDTH // 2, GRID_HEIGHT_PLAYABLE // 2)]
-                    snake_direction = (1, 0)
-                    snake_length = 3
-                    food_position = generate_food(snake_positions)
-                    key_map = randomize_key_mapping()
-                    game_over = False
-                    score = 0
-                    last_move_time = pygame.time.get_ticks()
+                    if event.key == pygame.K_SPACE:
+                        # Press space bar to restart
+                        if score > highScore:
+                            highScore = score
+                        snake_positions = [(GRID_WIDTH // 2, GRID_HEIGHT_PLAYABLE // 2)]
+                        snake_direction = (1, 0)
+                        snake_length = 6
+                        food_position = generate_food(snake_positions)
+                        key_map = randomize_key_mapping()
+                        game_over = False
+                        score = 0
+                        last_move_time = pygame.time.get_ticks()
                 else:
                     # Check if the key is in our current mapping
                     if event.key in key_map:
@@ -218,14 +224,14 @@ async def main():
         # Drawing   
         screen.fill((0, 0, 0))  # black background
 
-        draw_bar(score, key_map)
+        draw_bar(score, highScore, key_map)
         
         if game_over:
             gameover_sound.play()
             game_over_surface = big_font.render("GAME OVER", True, (255, 255, 0))
-            text_surface = font.render("Press any key to restart.", True, (255, 255, 255))
+            text_surface = font.render("Press space bar to restart.", True, (255, 255, 255))
             screen.blit(game_over_surface, ((GRID_WIDTH * BLOCK_SIZE) // 2 - 320, (GRID_HEIGHT * BLOCK_SIZE) // 2 - 150))
-            screen.blit(text_surface, ((GRID_WIDTH * BLOCK_SIZE) // 2 - 140, (GRID_HEIGHT * BLOCK_SIZE) // 2))
+            screen.blit(text_surface, ((GRID_WIDTH * BLOCK_SIZE) // 2 - 300, (GRID_HEIGHT * BLOCK_SIZE) // 2))
         else:
             draw_snake(snake_positions)
             draw_food(food_position)
