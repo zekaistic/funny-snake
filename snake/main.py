@@ -26,8 +26,8 @@ snake_sprite = pygame.transform.scale(snake_sprite, (BLOCK_SIZE, BLOCK_SIZE))
 # Fonts
 font = pygame.font.Font("PixelOperator-Bold.ttf", 50)
 big_font = pygame.font.Font("PixelOperator-Bold.ttf", 150)
-letter_font = pygame.font.Font("MomcakeBold-WyonA.otf", 26)
-arrow_font = pygame.font.Font("Arrows.ttf", 30)
+letter_font = pygame.font.Font("MomcakeBold-WyonA.otf", 30)
+arrow_font = pygame.font.Font("Arrows.ttf", 35)
 
 # Clock to control game speed
 clock = pygame.time.Clock()
@@ -56,27 +56,80 @@ def draw_bar(score, highScore, key_map):
     screen.blit(highScore_text, (250, SCREEN_HEIGHT - 100))
     
     # Render key mappings
-    center_x = 800
-    direction_labels = {"c": (0, -1), "d": (0, 1), "b": (-1, 0), "a": (1, 0)}  
-    offset_x = 100  # Horizontal offset for each label
-    
-    for i, (label, direction) in enumerate(direction_labels.items()):
-        key = next((k for k, v in key_map.items() if v == direction), None)
-        key_name = pygame.key.name(key) if key else "None"
-        key_name_text = key_name.capitalize()
-        key_name_surface = letter_font.render(key_name_text, True, (255, 255, 0))
-        
-        label_text = f"{label}: "
-        label_surface = arrow_font.render(label_text, True, (255, 255, 255))
+    center_x = 1000
+    center_y = SCREEN_HEIGHT - 90
 
-        label_x = center_x + i * offset_x
-        label_y = SCREEN_HEIGHT - 45
+    # UP
+    up_key = next((k for k, v in key_map.items() if v == (0, -1)), None)
+    up_key_name = pygame.key.name(up_key) if up_key else "None"
+    up_key_name_text = up_key_name.capitalize()
+    up_key_name_surface = letter_font.render(up_key_name_text, True, (255, 255, 0))
 
-        key_name_x = label_x + label_surface.get_width()
-        key_name_y = label_y
+    up_label_text = f"{"c"}: "
+    up_label_surface = arrow_font.render(up_label_text, True, (255, 255, 255))
 
-        screen.blit(label_surface, (label_x, label_y))
-        screen.blit(key_name_surface, (key_name_x, key_name_y))
+    up_label_x = center_x + 60
+    up_label_y = center_y - 27
+
+    up_key_name_x = up_label_x 
+    up_key_name_y = up_label_y - (up_label_surface.get_width() - 22)
+
+    screen.blit(up_label_surface, (up_label_x, up_label_y))
+    screen.blit(up_key_name_surface, (up_key_name_x, up_key_name_y))
+
+    # DOWN
+    down_key = next((k for k, v in key_map.items() if v == (0, 1)), None)
+    down_key_name = pygame.key.name(down_key) if down_key else "None"
+    down_key_name_text = down_key_name.capitalize()
+    down_key_name_surface = letter_font.render(down_key_name_text, True, (255, 255, 0))
+
+    down_label_text = f"{"d"}: "
+    down_label_surface = arrow_font.render(down_label_text, True, (255, 255, 255))
+
+    down_label_x = center_x + 60
+    down_label_y = center_y + 20
+
+    down_key_name_x = down_label_x + 1
+    down_key_name_y = down_label_y + down_label_surface.get_width() - 24
+
+    screen.blit(down_label_surface, (down_label_x, down_label_y))
+    screen.blit(down_key_name_surface, (down_key_name_x, down_key_name_y))
+
+    # LEFT
+    left_key = next((k for k, v in key_map.items() if v == (-1, 0)), None)
+    left_key_name = pygame.key.name(left_key) if left_key else "None"
+    left_key_name_text = left_key_name.capitalize()
+    left_key_name_surface = letter_font.render(left_key_name_text, True, (255, 255, 0))
+
+    left_label_text = f"{"b"}: "
+    left_label_surface = arrow_font.render(left_label_text, True, (255, 255, 255))
+
+    left_label_x = center_x + 27
+    left_label_y = center_y - 5
+
+    left_key_name_x = left_label_x - left_label_surface.get_width() + 39
+    left_key_name_y = left_label_y
+
+    screen.blit(left_label_surface, (left_label_x, left_label_y))
+    screen.blit(left_key_name_surface, (left_key_name_x, left_key_name_y))
+
+    # RIGHT
+    right_key = next((k for k, v in key_map.items() if v == (1, 0)), None)
+    right_key_name = pygame.key.name(right_key) if right_key else "None"
+    right_key_name_text = right_key_name.capitalize()
+    right_key_name_surface = letter_font.render(right_key_name_text, True, (255, 255, 0))
+
+    right_label_text = f"{"a"}: "
+    right_label_surface = arrow_font.render(right_label_text, True, (255, 255, 255))
+
+    right_label_x = center_x + 83
+    right_label_y = center_y - 5
+
+    right_key_name_x = right_label_x + right_label_surface.get_width() - 27
+    right_key_name_y = right_label_y
+
+    screen.blit(right_label_surface, (right_label_x, right_label_y))
+    screen.blit(right_key_name_surface, (right_key_name_x, right_key_name_y))
 
 def randomize_key_mapping():
     chosen_keys = random.sample(KEY_POOL, 4)
