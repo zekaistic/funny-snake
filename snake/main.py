@@ -9,7 +9,7 @@ pygame.init()
 # -----------------------
 # GAME CONSTANTS
 # -----------------------
-BAR_HEIGHT = 75
+BAR_HEIGHT = 150
 BLOCK_SIZE = 30  # Size of one grid block (in pixels)
 GRID_WIDTH = 40  # Number of blocks horizontally
 GRID_HEIGHT = 25 # Number of blocks vertically
@@ -29,9 +29,10 @@ snake_sprite = pygame.image.load("nyan2.jpg")
 snake_sprite = pygame.transform.scale(snake_sprite, (BLOCK_SIZE, BLOCK_SIZE))
 
 # Font for on-screen text
-font = pygame.font.Font("PixelOperator-Bold.ttf", 24)
+font = pygame.font.Font("PixelOperator-Bold.ttf", 50)
 big_font = pygame.font.Font("PixelOperator-Bold.ttf", 150)
 letter_font = pygame.font.Font("MomcakeBold-WyonA.otf", 26)
+arrow_font = pygame.font.Font("Arrows.ttf", 30)
 
 # Clock to control game speed
 clock = pygame.time.Clock()
@@ -52,14 +53,14 @@ snake_sprite = pygame.transform.scale(pygame.image.load("nyan2.jpg"), (BLOCK_SIZ
 food_sprite = pygame.transform.scale(pygame.image.load("greendonut.png"), (BLOCK_SIZE, BLOCK_SIZE))
 
 def draw_bar(score, key_map):
-    bar_rect = pygame.Rect(0, SCREEN_HEIGHT - 60, SCREEN_WIDTH, BAR_HEIGHT)
+    bar_rect = pygame.Rect(0, SCREEN_HEIGHT -150, SCREEN_WIDTH, BAR_HEIGHT)
     pygame.draw.rect(screen, (50, 50, 50), bar_rect)
     score_text = font.render(f"Score: {score}", True, (255, 255, 255))
-    screen.blit(score_text, (20, SCREEN_HEIGHT - 45))  # Draw score in the bottom-left corner of the bar
+    screen.blit(score_text, (20, SCREEN_HEIGHT - 100))  # Draw score in the bottom-left corner of the bar
     
     # Render key mappings
     center_x = 800
-    direction_labels = {"Up": (0, -1), "Down": (0, 1), "Left": (-1, 0), "Right": (1, 0)}
+    direction_labels = {"c": (0, -1), "d": (0, 1), "b": (-1, 0), "a": (1, 0)}
     offset_x = 100  # Horizontal offset for each label
     
     for i, (label, direction) in enumerate(direction_labels.items()):
@@ -69,7 +70,7 @@ def draw_bar(score, key_map):
         key_name_surface = letter_font.render(key_name_text, True, (255, 255, 0))
         
         label_text = f"{label}: "
-        label_surface = font.render(label_text, True, (255, 255, 255))
+        label_surface = arrow_font.render(label_text, True, (255, 255, 255))
 
         label_x = center_x + i * offset_x
         label_y = SCREEN_HEIGHT - 45
